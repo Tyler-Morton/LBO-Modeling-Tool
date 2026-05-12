@@ -34,7 +34,7 @@ function buildNav(activePage) {
       </a>`;
     }).join("")
   }</div>${ticker ? `<span class="nav-ticker-badge">${ticker}</span>` : ""}
-  <a href="about.html" style="margin-left:${ticker ? "12px" : "auto"};font-size:0.83rem;color:${activePage===0?"#f1f5f9":"#64748b"};text-decoration:none;padding:0 16px;height:56px;display:flex;align-items:center;border-bottom:2px solid ${activePage===0?"#ef4444":"transparent"};transition:color 0.2s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='${activePage===0?"#f1f5f9":"#64748b"}'">About</a>`;
+  <a href="about.html" style="margin-left:${ticker ? "12px" : "auto"};font-size:0.83rem;color:${activePage===0?"#f0fdf4":"#4d7a5a"};text-decoration:none;padding:0 16px;height:56px;display:flex;align-items:center;border-bottom:2px solid ${activePage===0?"#22c55e":"transparent"};transition:color 0.15s;" onmouseover="this.style.color='#6ee7b7'" onmouseout="this.style.color='${activePage===0?"#f0fdf4":"#4d7a5a"}'">About</a>`;
 }
 
 // Search dropdown shared logic

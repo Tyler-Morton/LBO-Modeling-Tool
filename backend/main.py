@@ -81,6 +81,7 @@ def build_company_payload(ticker, t, info):
         "debt_percent": debt_percent_pct,
         "interest_rate": 8.0,
         "exit_multiple": exit_multiple,
+        "entry_multiple": exit_multiple,
         "years": 5,
         "total_debt": round(total_debt / 1e6, 1),
         "enterprise_value": round(enterprise_value / 1e6, 1),
@@ -321,6 +322,59 @@ def monte_carlo(data: dict):
                 "counts": counts.tolist(),
                 "edges":  [round(float(e), 2) for e in edges],
             },
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/sensitivity")
+def sensitivity_analysis(data: dict):
+    required = ["revenue", "growth_rate", "ebitda_margin", "debt_percent",
+                "interest_rate", "exit_multiple", "years"]
+    missing = [k for k in required if k not in data]
+    if missing:
+        raise HTTPException(status_code=400, detail=f"Missing fields: {missing}")
+    try:
+        base_exit  = float(data.get("exit_multiple", 10))
+        base_entry = float(data.get("entry_multiple", base_exit))
+
+        # Build ranges centered on the base multiples
+        def make_range(base, steps=3, step=1.0):
+            return [round(base - steps * step + i * step, 1) for i in range(steps * 2 + 1)]
+
+        entry_range = [x for x in make_range(round(base_entry), steps=3) if x >= 3]
+        exit_range  = [x for x in make_range(round(base_exit),  steps=3) if x >= 3]
+
+        irr_grid  = []
+        moic_grid = []
+
+        for entry in entry_range:
+            irr_row  = []
+            moic_row = []
+            for exit_m in exit_range:
+                sim = dict(data)
+                sim["entry_multiple"] = float(entry)
+                sim["exit_multiple"]  = float(exit_m)
+                try:
+                    r    = run_lbo(sim)
+                    irr_row.append(r["irr"])
+                    moic = round(r["equity_value"] / r["initial_equity"], 2) if r["initial_equity"] > 0 else None
+                    moic_row.append(moic)
+                except Exception:
+                    irr_row.append(None)
+                    moic_row.append(None)
+            irr_grid.append(irr_row)
+            moic_grid.append(moic_row)
+
+        return {
+            "entry_multiples": entry_range,
+            "exit_multiples":  exit_range,
+            "base_entry":      base_entry,
+            "base_exit":       base_exit,
+            "irr_grid":        irr_grid,
+            "moic_grid":       moic_grid,
         }
     except HTTPException:
         raise

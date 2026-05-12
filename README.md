@@ -17,22 +17,25 @@ A web app that models leveraged buyouts using real financial data. Enter a stock
 
 | Field | Description |
 |---|---|
-| Ticker | Any public US stock (e.g. KO, MCD, DELL) |
+| Ticker | Any public US stock — or leave blank and enter metrics manually |
 | Revenue Growth Rate | Annual projected revenue growth |
 | EBITDA Margin | Operating profit as % of revenue |
 | Debt Financing % | How much of the purchase price is debt |
 | Interest Rate | Annual cost of debt |
-| Exit Multiple | EV/EBITDA at exit |
+| Entry Multiple | EV/EBITDA at acquisition (purchase price) |
+| Exit Multiple | EV/EBITDA at sale |
 | Hold Period | Years before selling (default 5) |
 
 ## Outputs
 
-- IRR (Internal Rate of Return)
+- Levered IRR and Unlevered IRR (business return vs. equity return)
 - MOIC (Multiple on Invested Capital)
 - Exit enterprise value and equity value
 - Annual financials table (revenue, EBITDA, interest, debt balance)
+- Credit metrics per year — Debt/EBITDA, Interest Coverage, DSCR
+- Sensitivity analysis grid — IRR and MOIC across entry/exit multiple combinations
 - Revenue, debt, and cash flow charts
-- Monte Carlo IRR distribution with full percentile breakdown
+- Monte Carlo IRR distribution with full percentile breakdown (P10–P90)
 
 ---
 
@@ -73,10 +76,27 @@ Open `frontend/index.html` in your browser.
 
 ## Good tickers to try
 
-Works best with profitable, cash-generative companies:
-`KO` `MCD` `DELL` `HLT` `DG` `ORLY`
+Works best with profitable, cash-generative companies. PE firms typically target mid-market businesses ($50M–$500M revenue), but larger public companies work well for learning the model.
 
-Avoid pre-revenue or money-losing companies (IonQ, biotech startups) — the validator will flag these.
+**Mid-market style (most realistic PE targets):**
+`WEN` `SCI` `TGLS` `YUM` `CRVL`
+
+**Large-cap (good for exploring the model):**
+`KO` `MCD` `HLT` `DG` `DELL` `ORLY`
+
+**No ticker? Use these manual inputs for a textbook mid-market deal:**
+
+| Field | Value |
+|---|---|
+| Revenue | $400M |
+| Growth | 7% |
+| EBITDA Margin | 22% |
+| Debt Financing | 65% |
+| Interest Rate | 9% |
+| Entry Multiple | 8x |
+| Exit Multiple | 10x |
+
+Avoid money-losing or pre-revenue companies (e.g. OPEN, IONQ, most biotech) — the validator will flag these and the model outputs will be meaningless.
 
 ---
 

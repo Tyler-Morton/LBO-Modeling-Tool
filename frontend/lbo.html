@@ -12,81 +12,174 @@
 
   <div class="page">
     <div class="page-header">
-      <svg class="utah-u" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 60" width="38" height="44">
+      <svg class="utah-u" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 60" width="36" height="42">
         <rect x="0" y="0" width="15" height="38" fill="#CC0000" rx="1"/>
         <rect x="37" y="0" width="15" height="38" fill="#CC0000" rx="1"/>
         <path d="M0,30 Q0,60 26,60 Q52,60 52,30 L37,30 Q37,45 26,45 Q15,45 15,30 Z" fill="#CC0000"/>
       </svg>
       <div class="page-header-text">
         <h1>LBO Model</h1>
-        <p>Review and adjust assumptions, then run the model to see projected returns.</p>
+        <p>Adjust assumptions and run the model to see projected buyout returns.</p>
       </div>
     </div>
 
     <div id="no-ticker" class="no-ticker" style="display:none;">
       <h2>No company selected</h2>
-      <p>Go back to <a href="index.html" style="color:#ef4444;">Step 1</a> and validate a company first.</p>
+      <p>Go back to <a href="index.html" style="color:var(--primary)">Step 1</a> and validate a company first.</p>
     </div>
 
     <div id="lbo-content" style="display:none;">
       <div id="company-tag" class="company-tag"></div>
 
+      <!-- Inputs + Results side by side -->
       <div class="main-grid">
-        <!-- Inputs -->
-        <section class="card">
-          <h2>Model Assumptions</h2>
-          <p class="inputs-note">Auto-filled from real data. Adjust as needed.</p>
+        <section class="card" style="margin-bottom:0;">
+          <h2>Assumptions</h2>
+          <p class="inputs-note">Auto-filled from Yahoo Finance. Adjust as needed.</p>
 
           <div class="input-group"><label>Initial Revenue ($M)</label>
-            <input type="number" id="revenue" step="1" min="1" /></div>
+            <input type="number" id="revenue" step="1" min="1"/></div>
           <div class="input-group"><label>Revenue Growth Rate (%)</label>
-            <input type="number" id="growth_rate" step="0.1" min="0" max="100" /></div>
+            <input type="number" id="growth_rate" step="0.1" min="0" max="100"/></div>
           <div class="input-group"><label>EBITDA Margin (%)</label>
-            <input type="number" id="ebitda_margin" step="0.1" min="0" max="100" /></div>
+            <input type="number" id="ebitda_margin" step="0.1" min="0" max="100"/></div>
           <div class="input-group"><label>Debt Financing (%)</label>
-            <input type="number" id="debt_percent" step="1" min="0" max="100" /></div>
+            <input type="number" id="debt_percent" step="1" min="0" max="100"/></div>
           <div class="input-group"><label>Interest Rate (%)</label>
-            <input type="number" id="interest_rate" step="0.1" min="0" max="100" /></div>
+            <input type="number" id="interest_rate" step="0.1" min="0" max="100"/></div>
+          <div class="input-group"><label>Entry Multiple (x)</label>
+            <input type="number" id="entry_multiple" step="0.5" min="1"/></div>
           <div class="input-group"><label>Exit Multiple (x)</label>
-            <input type="number" id="exit_multiple" step="0.5" min="1" /></div>
-          <div class="input-group"><label>Holding Period (Years)</label>
-            <input type="number" id="years" step="1" min="1" max="20" /></div>
+            <input type="number" id="exit_multiple" step="0.5" min="1"/></div>
+          <div class="input-group"><label>Hold Period (Years)</label>
+            <input type="number" id="years" step="1" min="1" max="20"/></div>
 
-          <button class="btn-primary" id="run-btn" onclick="runLBO()" style="width:100%;margin-top:8px;">Run Model</button>
+          <button class="run-btn" id="run-btn" onclick="runLBO()">Run Model</button>
         </section>
 
         <!-- Results -->
-        <section class="card" id="results" style="display:none;">
-          <h2>Key Returns</h2>
-          <div class="kpi-grid">
-            <div class="kpi"><span class="kpi-label">IRR</span><span class="kpi-value" id="irr-val">—</span></div>
-            <div class="kpi"><span class="kpi-label">Exit Enterprise Value</span><span class="kpi-value" id="exit-val">—</span></div>
-            <div class="kpi"><span class="kpi-label">Exit Equity Value</span><span class="kpi-value" id="equity-val">—</span></div>
-            <div class="kpi"><span class="kpi-label">MOIC</span><span class="kpi-value" id="moic-val">—</span></div>
-            <div class="kpi"><span class="kpi-label">Purchase Price</span><span class="kpi-value" id="purchase-val">—</span></div>
-            <div class="kpi"><span class="kpi-label">Initial Equity</span><span class="kpi-value" id="equity-in-val">—</span></div>
+        <section id="results" style="display:none;">
+
+          <!-- Levered vs Unlevered IRR -->
+          <div class="irr-compare">
+            <div class="irr-block">
+              <div class="irr-block-label">Levered IRR (Equity Return)</div>
+              <div class="irr-block-value" id="irr-val">—</div>
+              <div class="irr-block-desc">Return on equity invested, amplified by debt financing</div>
+            </div>
+            <div class="irr-block secondary">
+              <div class="irr-block-label">Unlevered IRR (Business Return)</div>
+              <div class="irr-block-value" id="unlevered-irr-val">—</div>
+              <div class="irr-block-desc">What the business alone returns — ignoring debt. The gap vs levered IRR shows how much value debt adds.</div>
+            </div>
           </div>
 
-          <div class="tables-grid">
+          <!-- KPIs -->
+          <div class="kpi-grid">
+            <div class="kpi highlight">
+              <span class="kpi-label">Exit Enterprise Value</span>
+              <span class="kpi-value" id="exit-val">—</span>
+            </div>
+            <div class="kpi">
+              <span class="kpi-label">Exit Equity Value</span>
+              <span class="kpi-value" id="equity-val">—</span>
+            </div>
+            <div class="kpi">
+              <span class="kpi-label">MOIC</span>
+              <span class="kpi-value" id="moic-val">—</span>
+              <span class="kpi-sub">Multiple on invested capital</span>
+            </div>
+            <div class="kpi">
+              <span class="kpi-label">Purchase Price</span>
+              <span class="kpi-value" id="purchase-val">—</span>
+            </div>
+            <div class="kpi">
+              <span class="kpi-label">Initial Equity</span>
+              <span class="kpi-value" id="equity-in-val">—</span>
+            </div>
+            <div class="kpi">
+              <span class="kpi-label">Initial Debt</span>
+              <span class="kpi-value" id="debt-in-val">—</span>
+            </div>
+          </div>
+
+          <!-- Annual Financials -->
+          <div class="card" style="margin-bottom:16px;">
             <h3>Annual Financials ($M)</h3>
-            <table id="financials-table">
-              <thead><tr><th>Year</th><th>Revenue</th><th>EBITDA</th><th>Interest</th><th>Debt Balance</th></tr></thead>
-              <tbody></tbody>
-            </table>
+            <div class="tables-grid">
+              <table id="financials-table">
+                <thead><tr>
+                  <th>Year</th><th>Revenue</th><th>EBITDA</th>
+                  <th>Interest</th><th>Debt Balance</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Credit Metrics -->
+          <div class="card" style="margin-bottom:0;">
+            <h3>Credit Metrics</h3>
+            <div class="tables-grid">
+              <table id="credit-table">
+                <thead><tr>
+                  <th>Year</th>
+                  <th>Debt/EBITDA</th>
+                  <th>Interest Coverage</th>
+                  <th>DSCR</th>
+                  <th>Status</th>
+                </tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div style="margin-top:12px;font-size:0.72rem;color:var(--text4);line-height:1.5;">
+              <strong style="color:var(--text3);">Debt/EBITDA</strong> — lenders want &lt;6x &nbsp;·&nbsp;
+              <strong style="color:var(--text3);">Interest Coverage</strong> — EBITDA ÷ Interest, need &gt;1.5x &nbsp;·&nbsp;
+              <strong style="color:var(--text3);">DSCR</strong> — EBITDA ÷ (Interest + Principal), banks require &gt;1.2x
+            </div>
           </div>
         </section>
       </div>
 
       <!-- Charts -->
       <div class="charts-grid" id="charts-section" style="display:none;">
-        <div class="card"><h3>Revenue & EBITDA ($M)</h3><canvas id="revenueChart"></canvas></div>
-        <div class="card"><h3>Debt Balance ($M)</h3><canvas id="debtChart"></canvas></div>
-        <div class="card"><h3>Cash Flows ($M)</h3><canvas id="cashflowChart"></canvas></div>
+        <div class="card" style="margin-bottom:0;">
+          <h3>Revenue &amp; EBITDA ($M)</h3>
+          <canvas id="revenueChart"></canvas>
+        </div>
+        <div class="card" style="margin-bottom:0;">
+          <h3>Debt Balance ($M)</h3>
+          <canvas id="debtChart"></canvas>
+        </div>
+        <div class="card" style="margin-bottom:0;">
+          <h3>Cash Flows ($M)</h3>
+          <canvas id="cashflowChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Sensitivity Analysis -->
+      <div class="card" id="sens-section" style="display:none; margin-top:4px;">
+        <h2>Sensitivity Analysis</h2>
+        <p style="font-size:0.8rem;color:var(--text4);margin-bottom:18px;margin-top:-10px;">
+          IRR (or MOIC) at every combination of entry multiple vs exit multiple.
+          The highlighted cell is your base case.
+        </p>
+
+        <div class="sensitivity-controls">
+          <div class="sens-toggle">
+            <button id="tog-irr"  class="active" onclick="toggleSens('irr')">IRR %</button>
+            <button id="tog-moic" onclick="toggleSens('moic')">MOIC</button>
+          </div>
+          <button class="btn-outline" id="sens-btn" onclick="runSensitivity()">Run Sensitivity</button>
+          <span id="sens-loading" style="font-size:0.78rem;color:var(--text4);display:none;">Computing…</span>
+        </div>
+
+        <div class="sens-table-wrap" id="sens-table-wrap" style="display:none;"></div>
       </div>
 
       <!-- Next step -->
-      <div id="next-step" style="display:none; text-align:right; margin-top:4px;">
-        <a href="monte-carlo.html" class="btn-primary">Run Monte Carlo Simulation →</a>
+      <div id="next-step" style="display:none; text-align:right; margin-top:16px;">
+        <a href="monte-carlo.html" class="btn-primary">Run Monte Carlo →</a>
       </div>
     </div>
 
@@ -99,126 +192,227 @@
 
     const state = getState();
     let revenueChart, debtChart, cashflowChart;
+    let sensData = null;
+    let sensMode = 'irr';
 
     if (!state.company) {
       document.getElementById("no-ticker").style.display = "block";
     } else {
       document.getElementById("lbo-content").style.display = "block";
       const c = state.company;
-
       document.getElementById("company-tag").innerHTML =
         `<span class="company-tag-ticker">${c.ticker}</span>
          <span class="company-tag-name">${c.name} · ${c.sector}</span>`;
-
-      document.getElementById("revenue").value      = c.revenue;
-      document.getElementById("growth_rate").value  = c.growth_rate;
-      document.getElementById("ebitda_margin").value = c.ebitda_margin;
-      document.getElementById("debt_percent").value  = c.debt_percent;
-      document.getElementById("interest_rate").value = c.interest_rate;
-      document.getElementById("exit_multiple").value = c.exit_multiple;
-      document.getElementById("years").value         = c.years;
+      document.getElementById("revenue").value        = c.revenue;
+      document.getElementById("growth_rate").value    = c.growth_rate;
+      document.getElementById("ebitda_margin").value  = c.ebitda_margin;
+      document.getElementById("debt_percent").value   = c.debt_percent;
+      document.getElementById("interest_rate").value  = c.interest_rate;
+      document.getElementById("entry_multiple").value = c.entry_multiple || c.exit_multiple;
+      document.getElementById("exit_multiple").value  = c.exit_multiple;
+      document.getElementById("years").value          = c.years;
     }
 
-    function fmt(v) {
+    function fmt(v, suffix="M") {
       if (v == null) return "N/A";
-      return "$" + v.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "M";
+      return "$" + v.toLocaleString("en-US", {minimumFractionDigits:1, maximumFractionDigits:1}) + suffix;
     }
 
     function getInputs() {
       return {
-        revenue:       parseFloat(document.getElementById("revenue").value),
-        growth_rate:   parseFloat(document.getElementById("growth_rate").value) / 100,
-        ebitda_margin: parseFloat(document.getElementById("ebitda_margin").value) / 100,
-        debt_percent:  parseFloat(document.getElementById("debt_percent").value) / 100,
-        interest_rate: parseFloat(document.getElementById("interest_rate").value) / 100,
-        exit_multiple: parseFloat(document.getElementById("exit_multiple").value),
-        years:         parseInt(document.getElementById("years").value),
+        revenue:        parseFloat(document.getElementById("revenue").value),
+        growth_rate:    parseFloat(document.getElementById("growth_rate").value) / 100,
+        ebitda_margin:  parseFloat(document.getElementById("ebitda_margin").value) / 100,
+        debt_percent:   parseFloat(document.getElementById("debt_percent").value) / 100,
+        interest_rate:  parseFloat(document.getElementById("interest_rate").value) / 100,
+        entry_multiple: parseFloat(document.getElementById("entry_multiple").value),
+        exit_multiple:  parseFloat(document.getElementById("exit_multiple").value),
+        years:          parseInt(document.getElementById("years").value),
       };
     }
 
-    const CHART_OPT = {
+    const COPTS = {
       responsive: true,
-      plugins: { legend: { labels: { color: "#94a3b8", font: { size: 11 } } } },
+      plugins: { legend: { labels: { color: "#6ee7b7", font: { size: 11 } } } },
       scales: {
-        x: { ticks: { color: "#64748b" }, grid: { color: "#1a1a1a" } },
-        y: { ticks: { color: "#64748b" }, grid: { color: "#2a2a2a" } },
+        x: { ticks: { color: "#4d7a5a" }, grid: { color: "#1a3522" } },
+        y: { ticks: { color: "#4d7a5a" }, grid: { color: "#1a3522" } },
       },
     };
 
     async function runLBO() {
       const btn = document.getElementById("run-btn");
-      btn.textContent = "Running..."; btn.disabled = true;
+      btn.textContent = "Running…"; btn.disabled = true;
       document.getElementById("error-msg").style.display = "none";
 
       try {
         const inputs = getInputs();
         const res = await fetch(`${API_URL}/lbo`, {
-          method: "POST", headers: { "Content-Type": "application/json" },
+          method: "POST", headers: {"Content-Type":"application/json"},
           body: JSON.stringify(inputs),
         });
         if (!res.ok) { const e = await res.json(); throw new Error(e.detail); }
         const r = await res.json();
-
-        // Save inputs for Monte Carlo
         setState({ lbo_inputs: inputs, lbo_result: r });
-
         renderResults(r);
-      } catch (e) {
+      } catch(e) {
         showError("error-msg", "Error: " + e.message + " — is the backend running?");
       } finally {
         btn.textContent = "Run Model"; btn.disabled = false;
       }
     }
 
-    function renderResults(r) {
-      document.getElementById("irr-val").textContent       = r.irr != null ? r.irr + "%" : "N/A";
-      document.getElementById("exit-val").textContent      = fmt(r.exit_value);
-      document.getElementById("equity-val").textContent    = fmt(r.equity_value);
-      document.getElementById("purchase-val").textContent  = fmt(r.purchase_price);
-      document.getElementById("equity-in-val").textContent = fmt(r.initial_equity);
-      document.getElementById("moic-val").textContent      = r.initial_equity > 0
-        ? (r.equity_value / r.initial_equity).toFixed(2) + "x" : "N/A";
+    function badgeForDscr(val) {
+      if (val == null) return '<span class="badge badge-danger">N/A</span>';
+      if (val >= 1.5)  return `<span class="badge badge-ok">Healthy ${val}x</span>`;
+      if (val >= 1.2)  return `<span class="badge badge-warning">Watch ${val}x</span>`;
+      return `<span class="badge badge-danger">Risk ${val}x</span>`;
+    }
 
-      const tbody = document.querySelector("#financials-table tbody");
-      tbody.innerHTML = "";
+    function renderResults(r) {
+      document.getElementById("irr-val").textContent          = r.irr != null ? r.irr + "%" : "N/A";
+      document.getElementById("unlevered-irr-val").textContent = r.unlevered_irr != null ? r.unlevered_irr + "%" : "N/A";
+      document.getElementById("exit-val").textContent         = fmt(r.exit_value);
+      document.getElementById("equity-val").textContent       = fmt(r.equity_value);
+      document.getElementById("purchase-val").textContent     = fmt(r.purchase_price);
+      document.getElementById("equity-in-val").textContent    = fmt(r.initial_equity);
+      document.getElementById("debt-in-val").textContent      = fmt(r.initial_debt);
+      document.getElementById("moic-val").textContent         = r.moic ? r.moic + "x" : "N/A";
+
+      // Financials table
+      const ftbody = document.querySelector("#financials-table tbody");
+      ftbody.innerHTML = "";
       r.years.forEach((yr, i) => {
-        tbody.insertAdjacentHTML("beforeend", `<tr>
+        ftbody.insertAdjacentHTML("beforeend", `<tr>
           <td>Year ${yr}</td><td>${fmt(r.revenues[i])}</td><td>${fmt(r.ebitda[i])}</td>
           <td>${fmt(r.interest_payments[i])}</td><td>${fmt(r.debt_balances[i])}</td>
         </tr>`);
       });
 
+      // Credit metrics table
+      const ctbody = document.querySelector("#credit-table tbody");
+      ctbody.innerHTML = "";
+      r.credit_metrics.forEach(m => {
+        const dEbitda = m.debt_ebitda != null ? m.debt_ebitda + "x" : "—";
+        const intCov  = m.interest_coverage != null ? m.interest_coverage + "x" : "—";
+        ctbody.insertAdjacentHTML("beforeend", `<tr>
+          <td>Year ${m.year}</td>
+          <td>${dEbitda}</td>
+          <td>${intCov}</td>
+          <td>${m.dscr != null ? m.dscr + "x" : "—"}</td>
+          <td>${badgeForDscr(m.dscr)}</td>
+        </tr>`);
+      });
+
       document.getElementById("results").style.display = "block";
       document.getElementById("charts-section").style.display = "grid";
+      document.getElementById("sens-section").style.display = "block";
       document.getElementById("next-step").style.display = "block";
 
+      // Charts
       [revenueChart, debtChart, cashflowChart].forEach(c => c && c.destroy());
       const labels = r.years.map(y => "Year " + y);
 
       revenueChart = new Chart(document.getElementById("revenueChart"), {
-        type: "bar", options: CHART_OPT,
+        type: "bar", options: COPTS,
         data: { labels, datasets: [
-          { label: "Revenue", data: r.revenues, backgroundColor: "#ef444433", borderColor: "#ef4444", borderWidth: 2 },
-          { label: "EBITDA",  data: r.ebitda,   backgroundColor: "#ffffff22", borderColor: "#e2e8f0", borderWidth: 2 },
+          { label: "Revenue", data: r.revenues, backgroundColor: "#22c55e22", borderColor: "#22c55e", borderWidth: 2 },
+          { label: "EBITDA",  data: r.ebitda,   backgroundColor: "#4ade8033", borderColor: "#4ade80", borderWidth: 2 },
         ]},
       });
 
       debtChart = new Chart(document.getElementById("debtChart"), {
-        type: "line", options: CHART_OPT,
+        type: "line", options: COPTS,
         data: { labels, datasets: [
-          { label: "Debt Balance", data: r.debt_balances, borderColor: "#ef4444", backgroundColor: "#ef444422", fill: true, tension: 0.3 },
+          { label: "Debt Balance", data: r.debt_balances, borderColor: "#f87171", backgroundColor: "#f8717118", fill: true, tension: 0.3 },
         ]},
       });
 
       cashflowChart = new Chart(document.getElementById("cashflowChart"), {
-        type: "bar", options: CHART_OPT,
+        type: "bar", options: COPTS,
         data: { labels: ["Entry", ...labels], datasets: [{
           label: "Cash Flow", data: r.cash_flows,
-          backgroundColor: r.cash_flows.map(v => v >= 0 ? "#ffffff33" : "#ef444466"),
-          borderColor:      r.cash_flows.map(v => v >= 0 ? "#e2e8f0"   : "#ef4444"),
+          backgroundColor: r.cash_flows.map(v => v >= 0 ? "#22c55e33" : "#f8717133"),
+          borderColor:      r.cash_flows.map(v => v >= 0 ? "#22c55e"   : "#f87171"),
           borderWidth: 2,
         }]},
       });
+    }
+
+    // ── Sensitivity Analysis ──────────────────────────────
+
+    function irrColor(val) {
+      if (val == null) return "irr-bad";
+      if (val >= 25)   return "irr-hot";
+      if (val >= 20)   return "irr-good";
+      if (val >= 15)   return "irr-ok";
+      if (val >= 10)   return "irr-low";
+      return "irr-bad";
+    }
+
+    function moicColor(val) {
+      if (val == null) return "irr-bad";
+      if (val >= 3.0)  return "irr-hot";
+      if (val >= 2.5)  return "irr-good";
+      if (val >= 2.0)  return "irr-ok";
+      if (val >= 1.5)  return "irr-low";
+      return "irr-bad";
+    }
+
+    function toggleSens(mode) {
+      sensMode = mode;
+      document.getElementById("tog-irr").classList.toggle("active",  mode === "irr");
+      document.getElementById("tog-moic").classList.toggle("active", mode === "moic");
+      if (sensData) renderSensTable(sensData);
+    }
+
+    function renderSensTable(d) {
+      const grid  = sensMode === "irr" ? d.irr_grid  : d.moic_grid;
+      const colorFn = sensMode === "irr" ? irrColor : moicColor;
+      const suffix  = sensMode === "irr" ? "%" : "x";
+
+      let html = `<table class="sens-table">
+        <thead><tr>
+          <th style="text-align:right;">Entry ↓ / Exit →</th>
+          ${d.exit_multiples.map(x => `<th>${x}x</th>`).join("")}
+        </tr></thead><tbody>`;
+
+      d.entry_multiples.forEach((entry, ri) => {
+        html += `<tr><td class="row-header">${entry}x</td>`;
+        d.exit_multiples.forEach((exit, ci) => {
+          const val = grid[ri][ci];
+          const isBase = Math.abs(entry - d.base_entry) < 0.5 && Math.abs(exit - d.base_exit) < 0.5;
+          const cls = colorFn(val) + (isBase ? " irr-base" : "");
+          html += `<td class="${cls}">${val != null ? val + suffix : "—"}</td>`;
+        });
+        html += "</tr>";
+      });
+
+      html += "</tbody></table>";
+      document.getElementById("sens-table-wrap").innerHTML = html;
+      document.getElementById("sens-table-wrap").style.display = "block";
+    }
+
+    async function runSensitivity() {
+      const btn = document.getElementById("sens-btn");
+      btn.textContent = "Running…"; btn.disabled = true;
+      document.getElementById("sens-loading").style.display = "inline";
+
+      try {
+        const inputs = getInputs();
+        const res = await fetch(`${API_URL}/sensitivity`, {
+          method: "POST", headers: {"Content-Type":"application/json"},
+          body: JSON.stringify(inputs),
+        });
+        if (!res.ok) { const e = await res.json(); throw new Error(e.detail); }
+        sensData = await res.json();
+        renderSensTable(sensData);
+      } catch(e) {
+        showError("error-msg", "Sensitivity error: " + e.message);
+      } finally {
+        btn.textContent = "Run Sensitivity"; btn.disabled = false;
+        document.getElementById("sens-loading").style.display = "none";
+      }
     }
   </script>
 </body>
